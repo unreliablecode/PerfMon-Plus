@@ -84,4 +84,8 @@
     <string name="rtss_bg_transparent">全透明 (纯阴影悬浮字)</string>
     <string name="rtss_bg_solid">纯深黑底框</string>
     <string name="rtss_fps_label_title">FPS 标签前缀</string>
+    <string name="show_hardware_names">显示 CPU 与 GPU 型号名称</string>
+    <string name="show_frametime">显示帧生成时间 (ms)</string>
+    <string name="show_fps_low_high">显示低帧与高帧 (1% Low / Max)</string>
+    <string name="show_frametime_graph">显示帧生成时间折线图 (Frametime Graph)</string>
 </resources>

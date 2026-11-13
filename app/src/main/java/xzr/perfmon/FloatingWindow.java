@@ -73,6 +73,12 @@ public class FloatingWindow extends Service {
     static boolean showGpubwNow;
     static boolean showLlcbwNow;
     static boolean showFpsNow;
+    static boolean showHardwareNamesNow;
+    static boolean showFrametimeNow;
+    static boolean showFpsLowHighNow;
+    static boolean showFrametimeGraphNow;
+    static String cpuModelName = "";
+    static String gpuModelName = "";
 
     private LinearLayout main;
     private RtssTheme theme;
@@ -86,6 +92,7 @@ public class FloatingWindow extends Service {
     private TextView[] cpuCoreLines;
     private TextView ramLine;
     private TextView fpsLine;
+    private RtssGraphView frametimeGraph;
     private TextView tempLine;
     private TextView currentLine;
     private TextView mincpubwLine;
@@ -138,6 +145,18 @@ public class FloatingWindow extends Service {
                 SharedPreferencesUtil.SHOW_LLCBW, SharedPreferencesUtil.SHOW_LLCBW_DEFAULT);
         showFpsNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
                 SharedPreferencesUtil.SHOW_FPS, SharedPreferencesUtil.SHOW_FPS_DEFAULT);
+        showHardwareNamesNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_HARDWARE_NAMES, SharedPreferencesUtil.SHOW_HARDWARE_NAMES_DEFAULT);
+        showFrametimeNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_FRAMETIME, SharedPreferencesUtil.SHOW_FRAMETIME_DEFAULT);
+        showFpsLowHighNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_FPS_LOW_HIGH, SharedPreferencesUtil.SHOW_FPS_LOW_HIGH_DEFAULT);
+        showFrametimeGraphNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_FRAMETIME_GRAPH, SharedPreferencesUtil.SHOW_FRAMETIME_GRAPH_DEFAULT);
+
+        cpuModelName = DeviceInfoUtil.getCpuName(this);
+        gpuModelName = DeviceInfoUtil.getGpuName(this);
+        FrameRateMonitor.getInstance().start();
 
         theme = RtssTheme.getTheme(this);
         cpuMode = SharedPreferencesUtil.sharedPreferences.getInt(
@@ -252,7 +271,11 @@ public class FloatingWindow extends Service {
             header.setLayoutParams(headerParams);
 
             TextView title = new TextView(this);
-            title.setText("RTSS / PERFMON");
+            String titleText = "RTSS / PERFMON";
+            if (showHardwareNamesNow && cpuModelName != null && !cpuModelName.isEmpty()) {
+                titleText = "RTSS / " + cpuModelName.toUpperCase();
+            }
+            title.setText(titleText);
             title.setTypeface(theme.typeface);
             title.setTextColor(theme.headerColor);
             title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9 * sizeMultipleNow);
@@ -358,10 +381,23 @@ public class FloatingWindow extends Service {
         }
 
         // 4. FPS line - FOURTH
-        if (Support.support_fps && showFpsNow) {
+        if (showFpsNow) {
             fpsLine = createRtssTextView();
             main.addView(fpsLine);
             allLines.add(fpsLine);
+
+            if (showFrametimeGraphNow) {
+                frametimeGraph = new RtssGraphView(this);
+                frametimeGraph.setTheme(theme, sizeMultipleNow);
+                LinearLayout.LayoutParams graphLp = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        (int) (34 * getResources().getDisplayMetrics().density * sizeMultipleNow));
+                int graphMargin = Math.max(2, (int) (2 * getResources().getDisplayMetrics().density * sizeMultipleNow));
+                graphLp.topMargin = graphMargin;
+                graphLp.bottomMargin = graphMargin;
+                frametimeGraph.setLayoutParams(graphLp);
+                main.addView(frametimeGraph);
+            }
         }
 
         // 5. Current / Battery line
@@ -423,6 +459,9 @@ public class FloatingWindow extends Service {
                 if (showGpufreqNow) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(adrenofreq), "MHz"));
                 }
+                if (showHardwareNamesNow && gpuModelName != null && !gpuModelName.isEmpty()) {
+                    items.add(new RtssFormatter.MetricItem("[" + gpuModelName + "]", "", false));
+                }
                 gpuLine.setText(RtssFormatter.createRow(theme, "GPU", items.toArray(new RtssFormatter.MetricItem[0])));
             }
 
@@ -444,6 +483,9 @@ public class FloatingWindow extends Service {
                 }
                 if (showCpufreqNow && Support.support_cpufreq) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(cpuMaxFreq), "MHz"));
+                }
+                if (showHardwareNamesNow && cpuModelName != null && !cpuModelName.isEmpty()) {
+                    items.add(new RtssFormatter.MetricItem("[" + cpuModelName + "]", "", false));
                 }
                 cpuGroupedLine.setText(RtssFormatter.createRow(theme, "CPU", items.toArray(new RtssFormatter.MetricItem[0])));
             }
@@ -486,11 +528,48 @@ public class FloatingWindow extends Service {
                         new RtssFormatter.MetricItem(String.valueOf(maxtemp), "°C")));
             }
 
-            // Update FPS
+            // Update FPS, Frametime & Low/High
             if (fpsLine != null) {
-                String fpsVal = (fps != null && !fps.trim().isEmpty()) ? fps.trim() : "--";
-                fpsLine.setText(RtssFormatter.createRow(theme, fpsPrefix,
-                        new RtssFormatter.MetricItem(fpsVal, "FPS")));
+                List<RtssFormatter.MetricItem> items = new ArrayList<>();
+                float currentFps = FrameRateMonitor.getInstance().getCurrentFps();
+                if (fps != null && !fps.trim().isEmpty()) {
+                    try {
+                        float p = Float.parseFloat(fps.trim());
+                        if (p > 0) currentFps = p;
+                    } catch (Throwable ignored) {}
+                }
+                String fpsVal = (currentFps > 0) ? String.format("%.0f", currentFps) : "--";
+                items.add(new RtssFormatter.MetricItem(fpsVal, "FPS"));
+
+                if (showFrametimeNow) {
+                    float ft = FrameRateMonitor.getInstance().getCurrentFrametimeMs();
+                    String ftVal = (ft > 0) ? String.format("%.1f", ft) : "--";
+                    items.add(new RtssFormatter.MetricItem(ftVal, "ms"));
+                }
+
+                if (showFpsLowHighNow && currentFps > 0) {
+                    float low = FrameRateMonitor.getInstance().getLowFps();
+                    float high = FrameRateMonitor.getInstance().getHighFps();
+                    String lhVal = String.format("L:%.0f H:%.0f", low, high);
+                    items.add(new RtssFormatter.MetricItem(lhVal, "", false));
+                }
+
+                fpsLine.setText(RtssFormatter.createRow(theme, fpsPrefix, items.toArray(new RtssFormatter.MetricItem[0])));
+            }
+
+            // Update Frametime Graph
+            if (frametimeGraph != null) {
+                float[] ordered = FrameRateMonitor.getInstance().getOrderedHistory();
+                float curFt = FrameRateMonitor.getInstance().getCurrentFrametimeMs();
+                float minFt = FrameRateMonitor.getInstance().getMinFrametimeMs();
+                float maxFt = FrameRateMonitor.getInstance().getMaxFrametimeMs();
+                float currentFps = FrameRateMonitor.getInstance().getCurrentFps();
+                float targetMs = 16.66f;
+                if (currentFps > 100) targetMs = 8.33f;
+                else if (currentFps > 75) targetMs = 11.11f;
+                else targetMs = 16.66f;
+
+                frametimeGraph.updateData(ordered, curFt, minFt, maxFt, targetMs);
             }
 
             // Update Current & Battery Temp
@@ -555,6 +634,7 @@ public class FloatingWindow extends Service {
     public void onDestroy() {
         Log.d(TAG, "Calling destroy service");
         doExit = true;
+        FrameRateMonitor.getInstance().stop();
         try {
             windowManager.removeView(main);
         } catch (Exception ignored) {

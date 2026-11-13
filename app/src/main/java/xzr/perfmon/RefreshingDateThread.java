@@ -187,9 +187,15 @@ public class RefreshingDateThread extends Thread {
                 gpubw = JniTools.getGpuBw();
             if (FloatingWindow.showLlcbwNow && Support.support_llcbw)
                 llcbw = JniTools.getLlccBw();
-            if (FloatingWindow.showFpsNow && Support.support_fps) {
+            if (FloatingWindow.showFpsNow) {
                 String rawFps = JniTools.getFps();
                 fps = rawFps != null ? rawFps.trim() : "";
+                if (!fps.isEmpty()) {
+                    try {
+                        float parsed = Float.parseFloat(fps);
+                        FrameRateMonitor.getInstance().onSysfsFps(parsed);
+                    } catch (Throwable ignored) {}
+                }
             }
             if (reverseCurrentNow)
                 current = -current;

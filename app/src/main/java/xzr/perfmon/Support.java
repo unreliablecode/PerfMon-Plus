@@ -84,10 +84,8 @@ class Support {
             support_llcbw = true;
         } else support_llcbw = false;
 
-        if (!JniTools.getFps().equals("")) {
-            linen++;
-            support_fps = true;
-        } else support_fps = false;
+        support_fps = true;
+        linen++;
 
         return linen;
     }

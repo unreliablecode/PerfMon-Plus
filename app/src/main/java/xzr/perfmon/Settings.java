@@ -674,6 +674,58 @@ class Settings {
                     }
                 });
             }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_hardware_names);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_HARDWARE_NAMES, SharedPreferencesUtil.SHOW_HARDWARE_NAMES_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_HARDWARE_NAMES, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_frametime);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_FRAMETIME, SharedPreferencesUtil.SHOW_FRAMETIME_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FRAMETIME, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_fps_low_high);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_FPS_LOW_HIGH, SharedPreferencesUtil.SHOW_FPS_LOW_HIGH_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FPS_LOW_HIGH, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_frametime_graph);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_FRAMETIME_GRAPH, SharedPreferencesUtil.SHOW_FRAMETIME_GRAPH_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FRAMETIME_GRAPH, sw.isChecked()).commit();
+                    }
+                });
+            }
         }
 
         // Window size overrides (optional)

@@ -84,4 +84,8 @@
     <string name="rtss_bg_transparent">Transparent (Shadow Only)</string>
     <string name="rtss_bg_solid">Solid Dark Box</string>
     <string name="rtss_fps_label_title">FPS Prefix</string>
+    <string name="show_hardware_names">Show CPU &amp; GPU Model Names</string>
+    <string name="show_frametime">Show Frametime (ms)</string>
+    <string name="show_fps_low_high">Show FPS Low &amp; High (1% Low / Max)</string>
+    <string name="show_frametime_graph">Show Frametime Graph</string>
 </resources>

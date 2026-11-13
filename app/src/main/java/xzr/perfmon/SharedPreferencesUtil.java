@@ -69,6 +69,18 @@ public class SharedPreferencesUtil {
     static final String SHOW_FPS = "show_fps";
     static final boolean SHOW_FPS_DEFAULT = true;
 
+    static final String SHOW_HARDWARE_NAMES = "show_hardware_names";
+    static final boolean SHOW_HARDWARE_NAMES_DEFAULT = true;
+
+    static final String SHOW_FRAMETIME = "show_frametime";
+    static final boolean SHOW_FRAMETIME_DEFAULT = true;
+
+    static final String SHOW_FPS_LOW_HIGH = "show_fps_low_high";
+    static final boolean SHOW_FPS_LOW_HIGH_DEFAULT = true;
+
+    static final String SHOW_FRAMETIME_GRAPH = "show_frametime_graph";
+    static final boolean SHOW_FRAMETIME_GRAPH_DEFAULT = true;
+
     // RivaTuner (RTSS) specific settings
     static final String RTSS_THEME = "rtss_theme";
     static final int RTSS_THEME_ORANGE_CYAN = 0;
