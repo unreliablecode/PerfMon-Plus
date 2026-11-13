@@ -98,6 +98,13 @@ public class FloatingWindow extends Service {
 
     @SuppressLint("ClickableViewAccessibility")
     void init() {
+        if (RefreshingDateThread.cpunum <= 0) {
+            RefreshingDateThread.cpunum = JniTools.getCpuNum();
+        }
+        if (RefreshingDateThread.cpunum <= 0) {
+            RefreshingDateThread.cpunum = Runtime.getRuntime().availableProcessors();
+        }
+
         sizeMultipleNow = SharedPreferencesUtil.sharedPreferences.getFloat(
                 SharedPreferencesUtil.SIZE_MULTIPLE, SharedPreferencesUtil.SIZE_MULTIPLE_DEFAULT);
 
@@ -320,7 +327,13 @@ public class FloatingWindow extends Service {
             allLines.add(cpuGroupedLine);
         }
 
-        if (showPerCore && (showCpufreqNow || showCpuloadNow || showCpuActiveNow) && Support.support_cpufreq) {
+        if (showPerCore && (showCpufreqNow || showCpuloadNow || showCpuActiveNow)) {
+            if (RefreshingDateThread.cpunum <= 0) {
+                RefreshingDateThread.cpunum = JniTools.getCpuNum();
+            }
+            if (RefreshingDateThread.cpunum <= 0) {
+                RefreshingDateThread.cpunum = Runtime.getRuntime().availableProcessors();
+            }
             int coreCount = Math.max(1, RefreshingDateThread.cpunum);
             cpuCoreLines = new TextView[coreCount];
             for (int i = 0; i < coreCount; i++) {
@@ -419,11 +432,15 @@ public class FloatingWindow extends Service {
                 if (showThermalNow && Support.support_temp && maxtemp != Support.UNSUPPORTED && maxtemp > 0) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(maxtemp), "°C"));
                 }
-                if (showCpuloadNow && Support.support_cpuload) {
+                if (showCpuloadNow) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(cpuAvgLoad), "%"));
                 }
-                if (showCpuActiveNow && cpuActivePercent >= 0) {
-                    items.add(new RtssFormatter.MetricItem(String.valueOf(cpuActivePercent), "% ACT"));
+                if (showCpuActiveNow) {
+                    if (!showCpuloadNow) {
+                        items.add(new RtssFormatter.MetricItem(String.valueOf(cpuActivePercent), "%"));
+                    } else if (cpuActivePercent != cpuAvgLoad) {
+                        items.add(new RtssFormatter.MetricItem(String.valueOf(cpuActivePercent), "% ACT"));
+                    }
                 }
                 if (showCpufreqNow && Support.support_cpufreq) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(cpuMaxFreq), "MHz"));
@@ -437,7 +454,7 @@ public class FloatingWindow extends Service {
                     String label = "CPU" + (c + 1);
                     if (cpuonline != null && c < cpuonline.length && cpuonline[c] == 1) {
                         List<RtssFormatter.MetricItem> items = new ArrayList<>();
-                        if (showCpuloadNow && Support.support_cpuload && cpuload != null && c < cpuload.length) {
+                        if ((showCpuloadNow || showCpuActiveNow) && cpuload != null && c < cpuload.length) {
                             items.add(new RtssFormatter.MetricItem(String.valueOf(cpuload[c]), "%"));
                         }
                         if (showCpufreqNow && Support.support_cpufreq && cpufreq != null && c < cpufreq.length) {

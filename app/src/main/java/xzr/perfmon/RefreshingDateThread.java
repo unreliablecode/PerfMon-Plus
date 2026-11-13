@@ -11,6 +11,8 @@ public class RefreshingDateThread extends Thread {
     static int[] cpufreq;
     static int[] cpuload;
     static int[] cpuonline;
+    static int[] coreMinFreq;
+    static int[] coreMaxFreq;
     static int cpuAvgLoad;
     static int cpuMaxFreq;
     static int cpuActivePercent;
@@ -44,10 +46,34 @@ public class RefreshingDateThread extends Thread {
     public void run() {
         delay = SharedPreferencesUtil.sharedPreferences.getInt(SharedPreferencesUtil.REFRESHING_DELAY, SharedPreferencesUtil.DEFAULT_DELAY);
         reverseCurrentNow = SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.REVERSE_CURRENT, SharedPreferencesUtil.REVERSE_CURRENT_DEFAULT);
+
+        if (cpunum <= 0) {
+            cpunum = JniTools.getCpuNum();
+        }
+        if (cpunum <= 0) {
+            cpunum = Runtime.getRuntime().availableProcessors();
+        }
+        if (cpunum <= 0) {
+            cpunum = 8;
+        }
+
         cpufreq = new int[cpunum];
         cpuload = new int[cpunum];
         cpuonline = new int[cpunum];
+        coreMinFreq = new int[cpunum];
+        coreMaxFreq = new int[cpunum];
+
+        for (int i = 0; i < cpunum; i++) {
+            int maxF = JniTools.getCpuMaxFreq(i);
+            int minF = JniTools.getCpuMinFreq(i);
+            coreMaxFreq[i] = (maxF > 0) ? maxF : 0;
+            coreMinFreq[i] = (minF > 0) ? minF : 0;
+        }
+
         while (!FloatingWindow.doExit) {
+            // Update CPU stats from /proc/stat if accessible
+            int nativeOverallActive = JniTools.updateCpuStats();
+
             int onlineCount = 0;
             int totalLoad = 0;
             int maxFreq = 0;
@@ -56,21 +82,50 @@ public class RefreshingDateThread extends Thread {
                 cpuonline[i] = JniTools.getCpuOnlineStatus(i);
                 if (cpuonline[i] == 1) {
                     onlineCount++;
-                    if (FloatingWindow.showCpufreqNow) {
-                        cpufreq[i] = JniTools.getCpuFreq(i);
-                        if (cpufreq[i] > maxFreq) {
-                            maxFreq = cpufreq[i];
+                    int freq = JniTools.getCpuFreq(i);
+                    cpufreq[i] = freq;
+                    if (freq > maxFreq) {
+                        maxFreq = freq;
+                    }
+
+                    int load = -1;
+                    if (nativeOverallActive != Support.UNSUPPORTED) {
+                        load = JniTools.getCpuLoad(i);
+                    }
+
+                    // Fallback to dynamic frequency scaling utilization
+                    if (load < 0) {
+                        if (freq > coreMaxFreq[i]) {
+                            coreMaxFreq[i] = freq;
+                        }
+                        if (coreMinFreq[i] <= 0 || (freq < coreMinFreq[i] && freq > 100)) {
+                            coreMinFreq[i] = freq;
+                        }
+                        int range = coreMaxFreq[i] - coreMinFreq[i];
+                        if (range > 0 && freq >= coreMinFreq[i]) {
+                            load = ((freq - coreMinFreq[i]) * 100) / range;
+                        } else if (freq >= coreMaxFreq[i] && coreMaxFreq[i] > 0) {
+                            load = 100;
+                        } else {
+                            load = 0;
                         }
                     }
-                    totalLoad += cpuload[i];
+
+                    load = Math.max(0, Math.min(100, load));
+                    cpuload[i] = load;
+                    totalLoad += load;
+                } else {
+                    cpuload[i] = 0;
+                    cpufreq[i] = 0;
                 }
             }
+
             cpuAvgLoad = onlineCount > 0 ? (totalLoad / onlineCount) : 0;
             cpuMaxFreq = maxFreq;
 
             if (FloatingWindow.showCpuActiveNow) {
-                int act = JniTools.getCpuActivePercent();
-                if (act == Support.UNSUPPORTED || act < 0) {
+                int act = nativeOverallActive;
+                if (act < 0) {
                     act = readCpuActivePercentJava();
                 }
                 cpuActivePercent = (act >= 0) ? act : cpuAvgLoad;
@@ -143,16 +198,6 @@ public class RefreshingDateThread extends Thread {
                 FloatingWindow.uiRefresher.sendEmptyMessage(0);
             }
 
-            for (int i = 0; i < cpunum; i++) {
-                if (cpuonline[i] == 1 && FloatingWindow.showCpuloadNow && Support.support_cpuload) {
-                    final int ii = i;
-                    new Thread() {
-                        public void run() {
-                            cpuload[ii] = JniTools.getCpuLoad(ii);
-                        }
-                    }.start();
-                }
-            }
             try {
                 Thread.sleep(delay);
             } catch (Exception ignored) {

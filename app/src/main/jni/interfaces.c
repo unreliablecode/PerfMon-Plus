@@ -5,8 +5,12 @@
 #include "xzr_perfmon_JniTools.h"
 #include "perfmon.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <math.h>
+
+#define MAX_SUPPORTED_CPUS 64
 
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuFreq
         (JNIEnv *env, jclass jclass1, jint cpu) {
@@ -70,15 +74,90 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getM4m
     return freq / 1000;
 }
 
+static unsigned long long prev_overall_active = 0;
+static unsigned long long prev_overall_total = 0;
+static int overall_cpu_load = 0;
+
+static unsigned long long prev_core_active[MAX_SUPPORTED_CPUS];
+static unsigned long long prev_core_total[MAX_SUPPORTED_CPUS];
+static int prev_core_init[MAX_SUPPORTED_CPUS];
+static int core_loads[MAX_SUPPORTED_CPUS];
+static int proc_stat_accessible = -1; // -1 = unknown, 1 = accessible, 0 = blocked
+
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_updateCpuStats
+        (JNIEnv *env, jclass jclass1) {
+    FILE *file = fopen("/proc/stat", "r");
+    if (file == NULL) {
+        proc_stat_accessible = 0;
+        return UNSUPPORTED;
+    }
+    proc_stat_accessible = 1;
+
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "cpu", 3) != 0) {
+            break;
+        }
+        if (line[3] == ' ') {
+            unsigned long long u = 0, n = 0, s = 0, id = 0, io = 0, ir = 0, so = 0, st = 0;
+            if (sscanf(line + 4, "%llu %llu %llu %llu %llu %llu %llu %llu",
+                       &u, &n, &s, &id, &io, &ir, &so, &st) >= 4) {
+                unsigned long long active = u + n + s + ir + so + st;
+                unsigned long long total = active + id + io;
+                if (prev_overall_total > 0 && total > prev_overall_total) {
+                    unsigned long long dActive = active - prev_overall_active;
+                    unsigned long long dTotal = total - prev_overall_total;
+                    if (dTotal > 0) {
+                        int pct = (int) ((dActive * 100) / dTotal);
+                        if (pct < 0) pct = 0;
+                        if (pct > 100) pct = 100;
+                        overall_cpu_load = pct;
+                    }
+                }
+                prev_overall_active = active;
+                prev_overall_total = total;
+            }
+        } else if (line[3] >= '0' && line[3] <= '9') {
+            char *endptr;
+            int core = (int) strtol(line + 3, &endptr, 10);
+            if (core >= 0 && core < MAX_SUPPORTED_CPUS) {
+                unsigned long long u = 0, n = 0, s = 0, id = 0, io = 0, ir = 0, so = 0, st = 0;
+                if (sscanf(endptr, "%llu %llu %llu %llu %llu %llu %llu %llu",
+                           &u, &n, &s, &id, &io, &ir, &so, &st) >= 4) {
+                    unsigned long long active = u + n + s + ir + so + st;
+                    unsigned long long total = active + id + io;
+                    if (prev_core_init[core] && total > prev_core_total[core]) {
+                        unsigned long long dActive = active - prev_core_active[core];
+                        unsigned long long dTotal = total - prev_core_total[core];
+                        if (dTotal > 0) {
+                            int pct = (int) ((dActive * 100) / dTotal);
+                            if (pct < 0) pct = 0;
+                            if (pct > 100) pct = 100;
+                            core_loads[core] = pct;
+                        }
+                    }
+                    prev_core_active[core] = active;
+                    prev_core_total[core] = total;
+                    prev_core_init[core] = 1;
+                }
+            }
+        }
+    }
+    fclose(file);
+    return overall_cpu_load;
+}
+
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuLoad
         (JNIEnv *env, jclass jclass1, jint cpu) {
-    int time1 = 0, time2 = 0, idle1 = 0, idle2 = 0;
-    if (get_cpu_time(cpu, &time1, &idle1))
+    if (proc_stat_accessible == 0) {
         return UNSUPPORTED;
-    usleep(pow(1 * 10, 6));
-    if (get_cpu_time(cpu, &time2, &idle2))
-        return UNSUPPORTED;
-    return (int) ((1 - (((float) idle2 - idle1) / (time2 - time1))) * 100);
+    }
+    if (cpu >= 0 && cpu < MAX_SUPPORTED_CPUS) {
+        if (prev_core_init[cpu]) {
+            return core_loads[cpu];
+        }
+    }
+    return UNSUPPORTED;
 }
 
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuOnlineStatus
@@ -87,10 +166,18 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuOnlineStatus
     char path[DEFAULT_PATH_SIZE];
 
     sprintf(path, "/sys/devices/system/cpu/cpu%d/online", cpu);
-    if (read_file_int(path, &status))
-        return UNSUPPORTED;
+    if (!read_file_int(path, &status))
+        return status;
 
-    return status;
+    if (cpu == 0)
+        return 1;
+
+    sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", cpu);
+    int freq = 0;
+    if (!read_file_int(path, &freq) && freq > 0)
+        return 1;
+
+    return 0;
 }
 
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getMaxTemp
@@ -104,9 +191,6 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getMaxTemp
 
 JNIEXPORT jboolean JNICALL Java_xzr_perfmon_JniTools_checkCpuLoad
         (JNIEnv *env, jclass jclass1) {
-    FILE *file = fopen("/proc/stat", "r");
-    if (file == NULL)
-        return 0;
     return 1;
 }
 
@@ -136,10 +220,21 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCurrent
 
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuNum
         (JNIEnv *env, jclass jclass1) {
-    int cpunum;
-    if (read_process_int("ls /sys/devices/system/cpu | grep -o \"cpu[0-9]*$\" | wc -l", &cpunum))
-        return 0;
-    return cpunum;
+    long nprocs = sysconf(_SC_NPROCESSORS_CONF);
+    if (nprocs > 0)
+        return (jint) nprocs;
+
+    int count = 0;
+    char path[DEFAULT_PATH_SIZE];
+    for (int i = 0; i < 64; i++) {
+        sprintf(path, "/sys/devices/system/cpu/cpu%d", i);
+        if (access(path, F_OK) == 0) {
+            count++;
+        } else if (i > 0) {
+            break;
+        }
+    }
+    return count;
 }
 
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getGpuBw
@@ -200,44 +295,42 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getBatteryTemp
     return UNSUPPORTED;
 }
 
-static unsigned long long prev_active_stat = 0;
-static unsigned long long prev_total_stat = 0;
-
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuActivePercent
         (JNIEnv *env, jclass jclass1) {
-    FILE *file = fopen("/proc/stat", "r");
-    if (file == NULL)
-        return UNSUPPORTED;
-
-    char tag[16];
-    unsigned long long user = 0, nice = 0, system = 0, idle = 0, iowait = 0, irq = 0, softirq = 0, steal = 0;
-    if (fscanf(file, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
-               tag, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) < 9) {
-        fclose(file);
+    if (proc_stat_accessible == 0) {
         return UNSUPPORTED;
     }
-    fclose(file);
+    return overall_cpu_load;
+}
 
-    unsigned long long active = user + nice + system + irq + softirq + steal;
-    unsigned long long total = active + idle + iowait;
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuMaxFreq
+        (JNIEnv *env, jclass jclass1, jint cpu) {
+    char path[DEFAULT_PATH_SIZE];
+    int freq;
 
-    if (prev_total_stat == 0 || total <= prev_total_stat) {
-        prev_active_stat = active;
-        prev_total_stat = total;
-        return 0;
-    }
+    sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cpu);
+    if (!read_file_int(path, &freq))
+        return freq / 1000;
 
-    unsigned long long delta_active = active - prev_active_stat;
-    unsigned long long delta_total = total - prev_total_stat;
+    sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cpu);
+    if (!read_file_int(path, &freq))
+        return freq / 1000;
 
-    prev_active_stat = active;
-    prev_total_stat = total;
+    return UNSUPPORTED;
+}
 
-    if (delta_total == 0)
-        return 0;
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuMinFreq
+        (JNIEnv *env, jclass jclass1, jint cpu) {
+    char path[DEFAULT_PATH_SIZE];
+    int freq;
 
-    int percent = (int) ((delta_active * 100) / delta_total);
-    if (percent < 0) percent = 0;
-    if (percent > 100) percent = 100;
-    return percent;
+    sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_min_freq", cpu);
+    if (!read_file_int(path, &freq))
+        return freq / 1000;
+
+    sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpu);
+    if (!read_file_int(path, &freq))
+        return freq / 1000;
+
+    return UNSUPPORTED;
 }

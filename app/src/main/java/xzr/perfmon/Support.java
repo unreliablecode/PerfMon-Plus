@@ -21,13 +21,21 @@ class Support {
     static int CheckSupport() {
         int linen = 0;
 
+        if (RefreshingDateThread.cpunum <= 0) {
+            RefreshingDateThread.cpunum = JniTools.getCpuNum();
+        }
+        if (RefreshingDateThread.cpunum <= 0) {
+            RefreshingDateThread.cpunum = Runtime.getRuntime().availableProcessors();
+        }
+
         if (JniTools.getCpuFreq(0) != UNSUPPORTED) {
             linen = linen + RefreshingDateThread.cpunum;
             support_cpufreq = true;
         } else support_cpufreq = false;
 
-        support_cpuload = JniTools.checkCpuLoad();
-        support_cpu_active = support_cpuload;
+        support_cpuload = true;
+        support_cpu_active = true;
+        linen++;
 
         if (JniTools.getAdrenoFreq() != UNSUPPORTED) {
             linen++;

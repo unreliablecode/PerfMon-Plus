@@ -43,7 +43,7 @@ int read_process_str(const char *cmd, char *result) {
 
 int get_cpu_time(int cpu, int *full_time, int *idle_time) {
     FILE *file;
-    char cpu_str[5];
+    char cpu_str[16];
     char cache[50];
     int num = 0, c;
 

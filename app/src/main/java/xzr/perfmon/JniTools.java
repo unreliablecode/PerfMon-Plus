@@ -40,4 +40,10 @@ public class JniTools {
     public static native int getBatteryTemp();
 
     public static native int getCpuActivePercent();
+
+    public static native int updateCpuStats();
+
+    public static native int getCpuMaxFreq(int cpu);
+
+    public static native int getCpuMinFreq(int cpu);
 }

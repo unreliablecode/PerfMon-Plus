@@ -151,6 +151,30 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getBatteryTemp
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuActivePercent
         (JNIEnv *, jclass);
 
+/*
+ * Class:     xzr_perfmon_JniTools
+ * Method:    updateCpuStats
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_updateCpuStats
+        (JNIEnv *, jclass);
+
+/*
+ * Class:     xzr_perfmon_JniTools
+ * Method:    getCpuMaxFreq
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuMaxFreq
+        (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xzr_perfmon_JniTools
+ * Method:    getCpuMinFreq
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuMinFreq
+        (JNIEnv *, jclass, jint);
+
 #ifdef __cplusplus
 }
 #endif

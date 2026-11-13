@@ -35,6 +35,9 @@ public class MainActivity extends Activity {
 
         //Move from service:onCreate in order to show the supporting list
         RefreshingDateThread.cpunum = JniTools.getCpuNum();
+        if (RefreshingDateThread.cpunum <= 0) {
+            RefreshingDateThread.cpunum = Runtime.getRuntime().availableProcessors();
+        }
         FloatingWindow.linen = Support.CheckSupport();
         SharedPreferencesUtil.init(this);
 
