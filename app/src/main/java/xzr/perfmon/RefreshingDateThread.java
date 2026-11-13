@@ -2,6 +2,9 @@ package xzr.perfmon;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 
 public class RefreshingDateThread extends Thread {
     static int cpunum;
@@ -16,6 +19,7 @@ public class RefreshingDateThread extends Thread {
     static int cpubw;
     static int m4m;
     static int maxtemp;
+    static int batttemp;
     static int memusage;
     static int memUsedMB;
     static int memTotalMB;
@@ -94,6 +98,27 @@ public class RefreshingDateThread extends Thread {
             }
             if (FloatingWindow.showCurrentNow && Support.support_current)
                 current = JniTools.getCurrent();
+            if (FloatingWindow.showBattTempNow && Support.support_batttemp) {
+                int bTemp = -1;
+                if (context != null) {
+                    try {
+                        Intent batteryIntent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                        if (batteryIntent != null) {
+                            int rawTemp = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                            if (rawTemp > 0) {
+                                bTemp = rawTemp / 10;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+                if (bTemp <= 0) {
+                    int nativeTemp = JniTools.getBatteryTemp();
+                    if (nativeTemp != Support.UNSUPPORTED && nativeTemp > 0) {
+                        bTemp = nativeTemp;
+                    }
+                }
+                batttemp = bTemp;
+            }
             if (FloatingWindow.showGpubwNow && Support.support_gpubw)
                 gpubw = JniTools.getGpuBw();
             if (FloatingWindow.showLlcbwNow && Support.support_llcbw)

@@ -619,6 +619,19 @@ class Settings {
             {
                 final Switch sw = new Switch(context);
                 linearLayout.addView(sw);
+                sw.setText(R.string.show_batttemp);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_BATTTEMP, SharedPreferencesUtil.SHOW_BATTTEMP_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_BATTTEMP, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
                 sw.setText(R.string.show_fps);
                 if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_FPS, SharedPreferencesUtil.SHOW_FPS_DEFAULT))
                     sw.setChecked(true);

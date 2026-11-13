@@ -5,6 +5,7 @@
     <string name="support_cpuload_mo">支持cpu负载监控：</string>
     <string name="support_cpubw_mo">支持cpubw频率监控：</string>
     <string name="support_current_mo">支持电流监控：</string>
+    <string name="support_batttemp_mo">支持电池温度监控：</string>
     <string name="support_gpufreq_mo">支持gpu频率监控：</string>
     <string name="support_gpuload_mo">支持gpu负载监控：</string>
     <string name="support_m4mfreq_mo">支持m4m频率监控：</string>
@@ -36,6 +37,8 @@
     <string name="show_cpubw">显示cpubw频率</string>
     <string name="show_cpuload">显示cpu负载</string>
     <string name="show_current">显示电流信息</string>
+    <string name="show_batttemp">显示电池温度</string>
+    <string name="batt_temp">"电池温度 "</string>
     <string name="show_gpufreq">显示gpu频率</string>
     <string name="show_gpuload">显示gpu负载</string>
     <string name="show_m4m">显示m4m频率</string>

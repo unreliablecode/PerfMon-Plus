@@ -36,4 +36,6 @@ public class JniTools {
     public static native int getCpuNum();
 
     public static native String getFps();
+
+    public static native int getBatteryTemp();
 }

@@ -10,6 +10,7 @@ class Support {
     static boolean support_temp;
     static boolean support_mem;
     static boolean support_current;
+    static boolean support_batttemp;
     static boolean support_gpubw;
     static boolean support_llcbw;
     static boolean support_fps;
@@ -60,6 +61,8 @@ class Support {
             linen++;
             support_current = true;
         } else support_current = false;
+
+        support_batttemp = true; // BatteryManager is universally supported on Android
 
         if (JniTools.getGpuBw() != UNSUPPORTED) {
             linen++;

@@ -10,6 +10,7 @@
     <string name="support_thermal_mo">"Support thermal monitoring: "</string>
     <string name="support_mem_mo">"Support RAM monitoring: "</string>
     <string name="support_current_mo">"Support current monitoring: "</string>
+    <string name="support_batttemp_mo">"Support battery temp monitoring: "</string>
     <string name="Unsupport_reason">* When it shows unsupported, it means either your kernel does not support this feature or your enforced SELinux stopped it from reading datas.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -40,6 +41,8 @@
     <string name="show_cpubw">Show cpubw</string>
     <string name="show_mem">Show RAM usage</string>
     <string name="show_current">Show current</string>
+    <string name="show_batttemp">Show battery temp</string>
+    <string name="batt_temp">"batt temp "</string>
     <string name="show_thermal">Show temp</string>
     <string name="show_mincpubw">Show mincpubw</string>
     <string name="show_gpubw">Show gpubw</string>

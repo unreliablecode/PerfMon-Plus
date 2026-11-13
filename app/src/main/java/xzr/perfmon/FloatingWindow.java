@@ -40,6 +40,7 @@ import static xzr.perfmon.RefreshingDateThread.gpubw;
 import static xzr.perfmon.RefreshingDateThread.llcbw;
 import static xzr.perfmon.RefreshingDateThread.m4m;
 import static xzr.perfmon.RefreshingDateThread.maxtemp;
+import static xzr.perfmon.RefreshingDateThread.batttemp;
 import static xzr.perfmon.RefreshingDateThread.memTotalMB;
 import static xzr.perfmon.RefreshingDateThread.memUsedMB;
 import static xzr.perfmon.RefreshingDateThread.memusage;
@@ -66,6 +67,7 @@ public class FloatingWindow extends Service {
     static boolean showThermalNow;
     static boolean showMemNow;
     static boolean showCurrentNow;
+    static boolean showBattTempNow;
     static boolean showGpubwNow;
     static boolean showLlcbwNow;
     static boolean showFpsNow;
@@ -117,6 +119,8 @@ public class FloatingWindow extends Service {
                 SharedPreferencesUtil.SHOW_MEM, SharedPreferencesUtil.SHOW_MEM_DEFAULT);
         showCurrentNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
                 SharedPreferencesUtil.SHOW_CURRENT, SharedPreferencesUtil.SHOW_CURRENT_DEFAULT);
+        showBattTempNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_BATTTEMP, SharedPreferencesUtil.SHOW_BATTTEMP_DEFAULT);
         showGpubwNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
                 SharedPreferencesUtil.SHOW_GPUBW, SharedPreferencesUtil.SHOW_GPUBW_DEFAULT);
         showLlcbwNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
@@ -350,7 +354,7 @@ public class FloatingWindow extends Service {
         }
 
         // 6. Current / Battery line
-        if (Support.support_current && showCurrentNow) {
+        if ((Support.support_current && showCurrentNow) || (Support.support_batttemp && showBattTempNow)) {
             currentLine = createRtssTextView();
             main.addView(currentLine);
             allLines.add(currentLine);
@@ -464,10 +468,16 @@ public class FloatingWindow extends Service {
                         new RtssFormatter.MetricItem(fpsVal, "FPS")));
             }
 
-            // Update Current
+            // Update Current & Battery Temp
             if (currentLine != null) {
-                currentLine.setText(RtssFormatter.createRow(theme, "BAT",
-                        new RtssFormatter.MetricItem(String.valueOf(current), "mA")));
+                List<RtssFormatter.MetricItem> items = new ArrayList<>();
+                if (showBattTempNow && Support.support_batttemp && batttemp > 0) {
+                    items.add(new RtssFormatter.MetricItem(String.valueOf(batttemp), "°C"));
+                }
+                if (showCurrentNow && Support.support_current) {
+                    items.add(new RtssFormatter.MetricItem(String.valueOf(current), "mA"));
+                }
+                currentLine.setText(RtssFormatter.createRow(theme, "BAT", items.toArray(new RtssFormatter.MetricItem[0])));
             }
 
             // Update Bus lines

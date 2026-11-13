@@ -54,6 +54,9 @@ public class SharedPreferencesUtil {
     static final String SHOW_CURRENT = "show_current";
     static final boolean SHOW_CURRENT_DEFAULT = true;
 
+    static final String SHOW_BATTTEMP = "show_batttemp";
+    static final boolean SHOW_BATTTEMP_DEFAULT = true;
+
     static final String SHOW_GPUBW = "show_gpubw";
     static final boolean SHOW_GPUBW_DEFAULT = false;
 

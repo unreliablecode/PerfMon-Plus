@@ -109,6 +109,11 @@ public class MainActivity extends Activity {
         }
         {
             TextView textView = new TextView(this);
+            textView.setText(getResources().getString(R.string.support_batttemp_mo) + Tools.bool2Text(Support.support_batttemp, this));
+            main.addView(textView);
+        }
+        {
+            TextView textView = new TextView(this);
             textView.setText(getResources().getString(R.string.support_fps_mo) + Tools.bool2Text(Support.support_fps, this));
             main.addView(textView);
         }

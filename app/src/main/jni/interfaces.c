@@ -177,3 +177,25 @@ JNIEXPORT jstring JNICALL Java_xzr_perfmon_JniTools_getFps
 
     return (*env)->NewStringUTF(env, "");
 }
+
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getBatteryTemp
+        (JNIEnv *env, jclass jclass1) {
+    int temp;
+    if (!read_file_int("/sys/class/power_supply/battery/temp", &temp)) {
+        if (temp > 1000) {
+            return temp / 1000;
+        } else if (temp > 100) {
+            return temp / 10;
+        }
+        return temp;
+    }
+    if (!read_file_int("/sys/class/power_supply/bms/temp", &temp)) {
+        if (temp > 1000) {
+            return temp / 1000;
+        } else if (temp > 100) {
+            return temp / 10;
+        }
+        return temp;
+    }
+    return UNSUPPORTED;
+}
