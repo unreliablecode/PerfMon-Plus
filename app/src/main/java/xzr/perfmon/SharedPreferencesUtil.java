@@ -22,7 +22,7 @@ public class SharedPreferencesUtil {
     static final boolean REVERSE_CURRENT_DEFAULT = false;
 
     static final String SIZE_MULTIPLE = "size_multiple";
-    static final float SIZE_MULTIPLE_DEFAULT = (float) 0.8;
+    static final float SIZE_MULTIPLE_DEFAULT = (float) 1.0;
 
     static final String SHOW_CPUFREQ = "show_cpufreq";
     static final boolean SHOW_CPUFREQ_DEFAULT = true;
@@ -43,7 +43,7 @@ public class SharedPreferencesUtil {
     static final boolean SHOW_MINCPUBW_DEFAULT = false;
 
     static final String SHOW_M4M = "show_m4m";
-    static final boolean SHOW_M4M_DEFAULT = true;
+    static final boolean SHOW_M4M_DEFAULT = false;
 
     static final String SHOW_THERMAL = "show_thermal";
     static final boolean SHOW_THERMAL_DEFAULT = true;
@@ -55,13 +55,45 @@ public class SharedPreferencesUtil {
     static final boolean SHOW_CURRENT_DEFAULT = true;
 
     static final String SHOW_GPUBW = "show_gpubw";
-    static final boolean SHOW_GPUBW_DEFAULT = true;
+    static final boolean SHOW_GPUBW_DEFAULT = false;
 
     static final String SHOW_LLCBW = "show_llcbw";
-    static final boolean SHOW_LLCBW_DEFAULT = true;
+    static final boolean SHOW_LLCBW_DEFAULT = false;
 
     static final String SHOW_FPS = "show_fps";
     static final boolean SHOW_FPS_DEFAULT = true;
+
+    // RivaTuner (RTSS) specific settings
+    static final String RTSS_THEME = "rtss_theme";
+    static final int RTSS_THEME_ORANGE_CYAN = 0;
+    static final int RTSS_THEME_CLASSIC_ORANGE = 1;
+    static final int RTSS_THEME_GREEN = 2;
+    static final int RTSS_THEME_ICE = 3;
+    static final int RTSS_THEME_WHITE = 4;
+    static final int DEFAULT_RTSS_THEME = RTSS_THEME_ORANGE_CYAN;
+
+    static final String RTSS_FONT = "rtss_font";
+    static final int RTSS_FONT_PIXEL = 0;
+    static final int RTSS_FONT_MONOSPACE = 1;
+    static final int DEFAULT_RTSS_FONT = RTSS_FONT_PIXEL;
+
+    static final String RTSS_CPU_MODE = "rtss_cpu_mode";
+    static final int RTSS_CPU_GROUPED = 0;
+    static final int RTSS_CPU_PER_CORE = 1;
+    static final int RTSS_CPU_BOTH = 2;
+    static final int DEFAULT_RTSS_CPU_MODE = RTSS_CPU_GROUPED;
+
+    static final String RTSS_SHOW_HEADER = "rtss_show_header";
+    static final boolean DEFAULT_RTSS_SHOW_HEADER = true;
+
+    static final String RTSS_BG_STYLE = "rtss_bg_style";
+    static final int RTSS_BG_TRANSLUCENT = 0;
+    static final int RTSS_BG_TRANSPARENT = 1;
+    static final int RTSS_BG_SOLID = 2;
+    static final int DEFAULT_RTSS_BG_STYLE = RTSS_BG_TRANSLUCENT;
+
+    static final String RTSS_FPS_LABEL = "rtss_fps_label";
+    static final String DEFAULT_RTSS_FPS_LABEL = "FPS";
 
     static void init(Context context) {
         sharedPreferences = context.getSharedPreferences("main", 0);

@@ -3,10 +3,14 @@ package xzr.perfmon;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -26,11 +30,292 @@ class Settings {
 
     private static View settingsView(final Context context) {
         ScrollView scrollView = new ScrollView(context);
-
-
         LinearLayout linearLayout = new LinearLayout(context);
         scrollView.addView(linearLayout);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        int pad = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, context.getResources().getDisplayMetrics());
+        linearLayout.setPadding(pad, pad, pad, pad);
+
+        // ════════════════════════════════════════════════════════════
+        // RIVATUNER (RTSS) OSD SETTINGS SECTION
+        // ════════════════════════════════════════════════════════════
+        {
+            TextView rtssHeader = new TextView(context);
+            rtssHeader.setText(R.string.rtss_settings_header);
+            rtssHeader.setTextColor(context.getResources().getColor(R.color.rtss_orange));
+            rtssHeader.setTypeface(null, Typeface.BOLD);
+            rtssHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            linearLayout.addView(rtssHeader);
+
+            View sep = new View(context);
+            sep.setBackgroundColor(context.getResources().getColor(R.color.rtss_orange));
+            LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 3);
+            sepParams.topMargin = 6;
+            sepParams.bottomMargin = 14;
+            linearLayout.addView(sep, sepParams);
+        }
+
+        // 1. Color Palette Selector
+        {
+            final String[] themes = new String[]{
+                    context.getString(R.string.rtss_theme_modern),
+                    context.getString(R.string.rtss_theme_classic),
+                    context.getString(R.string.rtss_theme_green),
+                    context.getString(R.string.rtss_theme_ice),
+                    context.getString(R.string.rtss_theme_white)
+            };
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.addView(row);
+
+            TextView label = new TextView(context);
+            label.setText(R.string.rtss_theme_title);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            row.addView(label);
+
+            final Button btn = new Button(context);
+            int curTheme = SharedPreferencesUtil.sharedPreferences.getInt(
+                    SharedPreferencesUtil.RTSS_THEME, SharedPreferencesUtil.DEFAULT_RTSS_THEME);
+            if (curTheme < 0 || curTheme >= themes.length) curTheme = 0;
+            btn.setText(themes[curTheme]);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int sel = SharedPreferencesUtil.sharedPreferences.getInt(
+                            SharedPreferencesUtil.RTSS_THEME, SharedPreferencesUtil.DEFAULT_RTSS_THEME);
+                    new AlertDialog.Builder(context)
+                            .setTitle(R.string.rtss_theme_title)
+                            .setSingleChoiceItems(themes, sel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    SharedPreferencesUtil.sharedPreferences.edit().putInt(
+                                            SharedPreferencesUtil.RTSS_THEME, which).commit();
+                                    btn.setText(themes[which]);
+                                    d.dismiss();
+                                }
+                            })
+                            .create().show();
+                }
+            });
+            row.addView(btn);
+        }
+
+        // 2. Font Style Selector
+        {
+            final String[] fonts = new String[]{
+                    context.getString(R.string.rtss_font_pixel),
+                    context.getString(R.string.rtss_font_mono)
+            };
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.addView(row);
+
+            TextView label = new TextView(context);
+            label.setText(R.string.rtss_font_title);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            row.addView(label);
+
+            final Button btn = new Button(context);
+            int curFont = SharedPreferencesUtil.sharedPreferences.getInt(
+                    SharedPreferencesUtil.RTSS_FONT, SharedPreferencesUtil.DEFAULT_RTSS_FONT);
+            if (curFont < 0 || curFont >= fonts.length) curFont = 0;
+            btn.setText(fonts[curFont]);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int sel = SharedPreferencesUtil.sharedPreferences.getInt(
+                            SharedPreferencesUtil.RTSS_FONT, SharedPreferencesUtil.DEFAULT_RTSS_FONT);
+                    new AlertDialog.Builder(context)
+                            .setTitle(R.string.rtss_font_title)
+                            .setSingleChoiceItems(fonts, sel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    SharedPreferencesUtil.sharedPreferences.edit().putInt(
+                                            SharedPreferencesUtil.RTSS_FONT, which).commit();
+                                    btn.setText(fonts[which]);
+                                    d.dismiss();
+                                }
+                            })
+                            .create().show();
+                }
+            });
+            row.addView(btn);
+        }
+
+        // 3. CPU Layout Selector
+        {
+            final String[] cpuModes = new String[]{
+                    context.getString(R.string.rtss_cpu_grouped),
+                    context.getString(R.string.rtss_cpu_per_core),
+                    context.getString(R.string.rtss_cpu_both)
+            };
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.addView(row);
+
+            TextView label = new TextView(context);
+            label.setText(R.string.rtss_cpu_mode_title);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            row.addView(label);
+
+            final Button btn = new Button(context);
+            int curCpu = SharedPreferencesUtil.sharedPreferences.getInt(
+                    SharedPreferencesUtil.RTSS_CPU_MODE, SharedPreferencesUtil.DEFAULT_RTSS_CPU_MODE);
+            if (curCpu < 0 || curCpu >= cpuModes.length) curCpu = 0;
+            btn.setText(cpuModes[curCpu]);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int sel = SharedPreferencesUtil.sharedPreferences.getInt(
+                            SharedPreferencesUtil.RTSS_CPU_MODE, SharedPreferencesUtil.DEFAULT_RTSS_CPU_MODE);
+                    new AlertDialog.Builder(context)
+                            .setTitle(R.string.rtss_cpu_mode_title)
+                            .setSingleChoiceItems(cpuModes, sel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    SharedPreferencesUtil.sharedPreferences.edit().putInt(
+                                            SharedPreferencesUtil.RTSS_CPU_MODE, which).commit();
+                                    btn.setText(cpuModes[which]);
+                                    d.dismiss();
+                                }
+                            })
+                            .create().show();
+                }
+            });
+            row.addView(btn);
+        }
+
+        // 4. Background Style Selector
+        {
+            final String[] bgStyles = new String[]{
+                    context.getString(R.string.rtss_bg_translucent),
+                    context.getString(R.string.rtss_bg_transparent),
+                    context.getString(R.string.rtss_bg_solid)
+            };
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.addView(row);
+
+            TextView label = new TextView(context);
+            label.setText(R.string.rtss_bg_style_title);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            row.addView(label);
+
+            final Button btn = new Button(context);
+            int curBg = SharedPreferencesUtil.sharedPreferences.getInt(
+                    SharedPreferencesUtil.RTSS_BG_STYLE, SharedPreferencesUtil.DEFAULT_RTSS_BG_STYLE);
+            if (curBg < 0 || curBg >= bgStyles.length) curBg = 0;
+            btn.setText(bgStyles[curBg]);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int sel = SharedPreferencesUtil.sharedPreferences.getInt(
+                            SharedPreferencesUtil.RTSS_BG_STYLE, SharedPreferencesUtil.DEFAULT_RTSS_BG_STYLE);
+                    new AlertDialog.Builder(context)
+                            .setTitle(R.string.rtss_bg_style_title)
+                            .setSingleChoiceItems(bgStyles, sel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    SharedPreferencesUtil.sharedPreferences.edit().putInt(
+                                            SharedPreferencesUtil.RTSS_BG_STYLE, which).commit();
+                                    btn.setText(bgStyles[which]);
+                                    d.dismiss();
+                                }
+                            })
+                            .create().show();
+                }
+            });
+            row.addView(btn);
+        }
+
+        // 5. FPS Prefix Selector
+        {
+            final String[] prefixes = new String[]{"FPS", "D3D11", "VULKAN", "OGL"};
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.addView(row);
+
+            TextView label = new TextView(context);
+            label.setText(R.string.rtss_fps_label_title);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            row.addView(label);
+
+            final Button btn = new Button(context);
+            String curP = SharedPreferencesUtil.sharedPreferences.getString(
+                    SharedPreferencesUtil.RTSS_FPS_LABEL, SharedPreferencesUtil.DEFAULT_RTSS_FPS_LABEL);
+            btn.setText(curP);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String cur = SharedPreferencesUtil.sharedPreferences.getString(
+                            SharedPreferencesUtil.RTSS_FPS_LABEL, SharedPreferencesUtil.DEFAULT_RTSS_FPS_LABEL);
+                    int sel = 0;
+                    for (int i = 0; i < prefixes.length; i++) {
+                        if (prefixes[i].equals(cur)) {
+                            sel = i;
+                            break;
+                        }
+                    }
+                    new AlertDialog.Builder(context)
+                            .setTitle(R.string.rtss_fps_label_title)
+                            .setSingleChoiceItems(prefixes, sel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    SharedPreferencesUtil.sharedPreferences.edit().putString(
+                                            SharedPreferencesUtil.RTSS_FPS_LABEL, prefixes[which]).commit();
+                                    btn.setText(prefixes[which]);
+                                    d.dismiss();
+                                }
+                            })
+                            .create().show();
+                }
+            });
+            row.addView(btn);
+        }
+
+        // 6. Show Title Bar Switch
+        {
+            final Switch sw = new Switch(context);
+            linearLayout.addView(sw);
+            sw.setText(R.string.rtss_show_header);
+            if (SharedPreferencesUtil.sharedPreferences.getBoolean(
+                    SharedPreferencesUtil.RTSS_SHOW_HEADER, SharedPreferencesUtil.DEFAULT_RTSS_SHOW_HEADER))
+                sw.setChecked(true);
+            sw.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SharedPreferencesUtil.sharedPreferences.edit().putBoolean(
+                            SharedPreferencesUtil.RTSS_SHOW_HEADER, sw.isChecked()).commit();
+                }
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // GENERAL SETTINGS SECTION
+        // ════════════════════════════════════════════════════════════
+        {
+            TextView generalHeader = new TextView(context);
+            generalHeader.setText("\nGeneral Settings");
+            generalHeader.setTextColor(Color.DKGRAY);
+            generalHeader.setTypeface(null, Typeface.BOLD);
+            generalHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+            linearLayout.addView(generalHeader);
+
+            View sep = new View(context);
+            sep.setBackgroundColor(Color.LTGRAY);
+            LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 2);
+            sepParams.topMargin = 4;
+            sepParams.bottomMargin = 10;
+            linearLayout.addView(sep, sepParams);
+        }
 
         {
             final Switch sw = new Switch(context);
@@ -82,12 +367,10 @@ class Settings {
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
@@ -99,14 +382,14 @@ class Settings {
                     }
                 }
             });
-
-
         }
+
         {
             TextView textView = new TextView(context);
             linearLayout.addView(textView);
             textView.setText(R.string.interval_notice);
         }
+
         {
             final Switch sw = new Switch(context);
             linearLayout.addView(sw);
@@ -124,6 +407,7 @@ class Settings {
                 }
             });
         }
+
         {
             LinearLayout line = new LinearLayout(context);
             linearLayout.addView(line);
@@ -140,12 +424,10 @@ class Settings {
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
@@ -157,13 +439,27 @@ class Settings {
                     }
                 }
             });
-
-
         }
+
+        // ════════════════════════════════════════════════════════════
+        // MONITOR TOGGLES SECTION
+        // ════════════════════════════════════════════════════════════
         {
             TextView textView = new TextView(context);
-            textView.setText(R.string.moni_ctl);
             linearLayout.addView(textView);
+            textView.setText("\n" + context.getString(R.string.moni_ctl));
+            textView.setTypeface(null, Typeface.BOLD);
+            textView.setTextColor(Color.DKGRAY);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+
+            View sep = new View(context);
+            sep.setBackgroundColor(Color.LTGRAY);
+            LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 2);
+            sepParams.topMargin = 4;
+            sepParams.bottomMargin = 10;
+            linearLayout.addView(sep, sepParams);
+
             {
                 final Switch sw = new Switch(context);
                 linearLayout.addView(sw);
@@ -173,11 +469,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUFREQ, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUFREQ, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUFREQ, sw.isChecked()).commit();
                     }
                 });
             }
@@ -190,11 +482,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPULOAD, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPULOAD, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPULOAD, sw.isChecked()).commit();
                     }
                 });
             }
@@ -207,11 +495,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUFREQ, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUFREQ, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUFREQ, sw.isChecked()).commit();
                     }
                 });
             }
@@ -224,11 +508,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPULOAD, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPULOAD, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPULOAD, sw.isChecked()).commit();
                     }
                 });
             }
@@ -241,28 +521,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUBW, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUBW, false).commit();
-                        }
-                    }
-                });
-            }
-            {
-                final Switch sw = new Switch(context);
-                linearLayout.addView(sw);
-                sw.setText(R.string.show_gpubw);
-                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_GPUBW, SharedPreferencesUtil.SHOW_GPUBW_DEFAULT))
-                    sw.setChecked(true);
-                sw.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUBW, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUBW, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPUBW, sw.isChecked()).commit();
                     }
                 });
             }
@@ -275,11 +534,20 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MINCPUBW, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MINCPUBW, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MINCPUBW, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_gpubw);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_GPUBW, SharedPreferencesUtil.SHOW_GPUBW_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_GPUBW, sw.isChecked()).commit();
                     }
                 });
             }
@@ -292,11 +560,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_LLCBW, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_LLCBW, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_LLCBW, sw.isChecked()).commit();
                     }
                 });
             }
@@ -309,11 +573,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_M4M, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_M4M, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_M4M, sw.isChecked()).commit();
                     }
                 });
             }
@@ -326,11 +586,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_THERMAL, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_THERMAL, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_THERMAL, sw.isChecked()).commit();
                     }
                 });
             }
@@ -343,11 +599,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MEM, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MEM, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_MEM, sw.isChecked()).commit();
                     }
                 });
             }
@@ -360,11 +612,7 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CURRENT, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CURRENT, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CURRENT, sw.isChecked()).commit();
                     }
                 });
             }
@@ -377,15 +625,13 @@ class Settings {
                 sw.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (sw.isChecked()) {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FPS, true).commit();
-                        } else {
-                            SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FPS, false).commit();
-                        }
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_FPS, sw.isChecked()).commit();
                     }
                 });
             }
         }
+
+        // Window size overrides (optional)
         {
             LinearLayout line = new LinearLayout(context);
             linearLayout.addView(line);
@@ -404,12 +650,10 @@ class Settings {
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
@@ -419,11 +663,8 @@ class Settings {
                     } catch (Exception e) {
                         SharedPreferencesUtil.sharedPreferences.edit().remove(SharedPreferencesUtil.WINDOW_WIDTH).commit();
                     }
-
                 }
             });
-
-
         }
 
         {
@@ -445,12 +686,10 @@ class Settings {
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 }
 
                 @Override
@@ -460,12 +699,10 @@ class Settings {
                     } catch (Exception e) {
                         SharedPreferencesUtil.sharedPreferences.edit().remove(SharedPreferencesUtil.WINDOW_HEIGHT).commit();
                     }
-
                 }
             });
-
-
         }
+
         return scrollView;
     }
 }

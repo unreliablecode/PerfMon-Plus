@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="white">#FFFFFF</color>
-    <color name="floating_window_backgrouns">#c8313131</color>
+    <color name="floating_window_backgrouns">#990E1114</color>
+
+    <!-- RivaTuner / RTSS Signature Colors -->
+    <color name="rtss_orange">#FF8000</color>
+    <color name="rtss_cyan">#00E5FF</color>
+    <color name="rtss_dim_cyan">#80DEEA</color>
+    <color name="rtss_green">#00E676</color>
+    <color name="rtss_red">#FF5252</color>
+    <color name="rtss_gray">#757575</color>
+    <color name="rtss_bg">#990E1114</color>
+    <color name="rtss_border">#33FF8000</color>
+    <color name="rtss_shadow">#FF000000</color>
 </resources>

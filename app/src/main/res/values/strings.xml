@@ -57,4 +57,24 @@
     <string name="cancel">cancel</string>
     <string name="skip_first_screen_str_disabled">Skipping the checking screen is disabled</string>
     <string name="enforce_done">SELinux is now enforcing, please re-open the app.</string>
+    <string name="rtss_settings_header">RivaTuner OSD Settings</string>
+    <string name="rtss_theme_title">Color Palette</string>
+    <string name="rtss_theme_modern">Modern (Orange &amp; Cyan)</string>
+    <string name="rtss_theme_classic">Classic (Orange)</string>
+    <string name="rtss_theme_green">Vector Green</string>
+    <string name="rtss_theme_ice">Ice (Cyan &amp; White)</string>
+    <string name="rtss_theme_white">Stealth (White)</string>
+    <string name="rtss_font_title">Font Style</string>
+    <string name="rtss_font_pixel">RivaTuner Pixel / OSD Font</string>
+    <string name="rtss_font_mono">Monospace Bold</string>
+    <string name="rtss_cpu_mode_title">CPU Layout</string>
+    <string name="rtss_cpu_grouped">Grouped (CPU temp load% freq)</string>
+    <string name="rtss_cpu_per_core">Per-Core (CPU1, CPU2...)</string>
+    <string name="rtss_cpu_both">Both (Grouped + Per-Core)</string>
+    <string name="rtss_show_header">Show Title Bar</string>
+    <string name="rtss_bg_style_title">OSD Background</string>
+    <string name="rtss_bg_translucent">Translucent Dark HUD</string>
+    <string name="rtss_bg_transparent">Transparent (Shadow Only)</string>
+    <string name="rtss_bg_solid">Solid Dark Box</string>
+    <string name="rtss_fps_label_title">FPS Prefix</string>
 </resources>

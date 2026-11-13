@@ -154,7 +154,9 @@ int get_mem_info(char name[], int *data) {
     FILE *mem_info;
     char cache[20] = "";
 
-    mem_info = fopen("/proc/mem_info", "r");
+    mem_info = fopen("/proc/meminfo", "r");
+    if (mem_info == NULL)
+        mem_info = fopen("/proc/mem_info", "r");
     if (mem_info == NULL)
         return UNSUPPORTED;
 

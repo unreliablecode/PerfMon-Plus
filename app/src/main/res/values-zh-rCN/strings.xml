@@ -57,5 +57,24 @@
     <string name="cancel">取消</string>
     <string name="skip_first_screen_str_disabled">跳过兼容性检测页面已禁用</string>
     <string name="enforce_done">SELinux已启用！请重启本应用</string>
-
+    <string name="rtss_settings_header">RivaTuner OSD 样式设置</string>
+    <string name="rtss_theme_title">配色方案</string>
+    <string name="rtss_theme_modern">现代 (经典橙青双色)</string>
+    <string name="rtss_theme_classic">经典 (纯橙色)</string>
+    <string name="rtss_theme_green">复古绿 (Vector 2D)</string>
+    <string name="rtss_theme_ice">冰蓝 (青白双色)</string>
+    <string name="rtss_theme_white">极简白</string>
+    <string name="rtss_font_title">字体风格</string>
+    <string name="rtss_font_pixel">RivaTuner 点阵/OSD像素字体</string>
+    <string name="rtss_font_mono">系统等宽粗体</string>
+    <string name="rtss_cpu_mode_title">CPU 排版布局</string>
+    <string name="rtss_cpu_grouped">整合汇总行 (温度 负载 频率)</string>
+    <string name="rtss_cpu_per_core">逐核心行 (CPU1, CPU2...)</string>
+    <string name="rtss_cpu_both">双重显示 (汇总行 + 逐核心)</string>
+    <string name="rtss_show_header">显示标题栏与关闭键</string>
+    <string name="rtss_bg_style_title">OSD 背景效果</string>
+    <string name="rtss_bg_translucent">半透明深色 HUD</string>
+    <string name="rtss_bg_transparent">全透明 (纯阴影悬浮字)</string>
+    <string name="rtss_bg_solid">纯深黑底框</string>
+    <string name="rtss_fps_label_title">FPS 标签前缀</string>
 </resources>
