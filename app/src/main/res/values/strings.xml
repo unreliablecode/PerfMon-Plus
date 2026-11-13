@@ -3,6 +3,7 @@
     <string name="please_close_app_first">Please close the monitor first</string>
     <string name="support_cpufreq_mo">"Support cpufreq monitoring: "</string>
     <string name="support_cpuload_mo">"Support cpuload monitoring: "</string>
+    <string name="support_cpu_active_mo">"Support CPU active time monitoring: "</string>
     <string name="support_gpufreq_mo">"Support gpufreq monitoring: "</string>
     <string name="support_gpuload_mo">"Support gpuload monitoring: "</string>
     <string name="support_cpubw_mo">"Support cpubw monitoring: "</string>
@@ -35,6 +36,7 @@
     <string name="moni_ctl">Monitor control</string>
     <string name="show_cpufreq">Show cpufreq</string>
     <string name="show_cpuload">Show cpuload</string>
+    <string name="show_cpu_active">Show CPU active time %</string>
     <string name="show_gpufreq">Show gpufreq</string>
     <string name="show_gpuload">Show gpuload</string>
     <string name="show_m4m">Show m4m freq</string>
@@ -51,6 +53,8 @@
     <string name="support_llcbw_mo">"Support system cache bw monitoring: "</string>
     <string name="window_width">Window width</string>
     <string name="window_height">Window height</string>
+    <string name="reset_window_size">Reset to Auto (Wrap Content)</string>
+    <string name="window_size_auto_notice">* Auto sizing binds the container size directly to the scaled content.</string>
     <string name="show_fps">Show fps</string>
     <string name="support_fps_mo">"Support fps monitoring: "</string>
     <string name="skip_first_screen_str">Skip the checking screen</string>

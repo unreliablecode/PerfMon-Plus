@@ -64,6 +64,11 @@ public class MainActivity extends Activity {
         }
         {
             TextView textView = new TextView(this);
+            textView.setText(getResources().getString(R.string.support_cpu_active_mo) + Tools.bool2Text(Support.support_cpu_active, this));
+            main.addView(textView);
+        }
+        {
+            TextView textView = new TextView(this);
             textView.setText(getResources().getString(R.string.support_gpufreq_mo) + Tools.bool2Text(Support.support_adrenofreq, this));
             main.addView(textView);
         }

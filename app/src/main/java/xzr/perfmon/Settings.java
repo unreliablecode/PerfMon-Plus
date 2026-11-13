@@ -14,8 +14,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 class Settings {
     private static AlertDialog dialog;
@@ -55,6 +57,56 @@ class Settings {
             sepParams.topMargin = 6;
             sepParams.bottomMargin = 14;
             linearLayout.addView(sep, sepParams);
+        }
+
+        // 0. Scaling Slider (Size Multiple)
+        {
+            LinearLayout scaleRow = new LinearLayout(context);
+            scaleRow.setOrientation(LinearLayout.VERTICAL);
+            scaleRow.setPadding(0, 0, 0, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, context.getResources().getDisplayMetrics()));
+            linearLayout.addView(scaleRow);
+
+            final TextView scaleLabel = new TextView(context);
+            float curScale = SharedPreferencesUtil.sharedPreferences.getFloat(
+                    SharedPreferencesUtil.SIZE_MULTIPLE, SharedPreferencesUtil.SIZE_MULTIPLE_DEFAULT);
+            scaleLabel.setText(String.format("%s: %.2fx (%d%%)",
+                    context.getString(R.string.size_multiple), curScale, Math.round(curScale * 100)));
+            scaleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            scaleLabel.setTypeface(null, Typeface.BOLD);
+            scaleLabel.setTextColor(context.getResources().getColor(R.color.rtss_orange));
+            scaleRow.addView(scaleLabel);
+
+            SeekBar seekBar = new SeekBar(context);
+            seekBar.setMax(200);
+            int initProg = Math.round((curScale - 0.50f) * 100f);
+            if (initProg < 0) initProg = 0;
+            if (initProg > 200) initProg = 200;
+            seekBar.setProgress(initProg);
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                    float newScale = 0.50f + (progress * 0.01f);
+                    newScale = Math.round(newScale * 20.0f) / 20.0f;
+                    scaleLabel.setText(String.format("%s: %.2fx (%d%%)",
+                            context.getString(R.string.size_multiple), newScale, Math.round(newScale * 100)));
+                    if (fromUser) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putFloat(
+                                SharedPreferencesUtil.SIZE_MULTIPLE, newScale).commit();
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar sb) {}
+
+                @Override
+                public void onStopTrackingTouch(SeekBar sb) {
+                    float newScale = 0.50f + (sb.getProgress() * 0.01f);
+                    newScale = Math.round(newScale * 20.0f) / 20.0f;
+                    SharedPreferencesUtil.sharedPreferences.edit().putFloat(
+                            SharedPreferencesUtil.SIZE_MULTIPLE, newScale).commit();
+                }
+            });
+            scaleRow.addView(seekBar);
         }
 
         // 1. Color Palette Selector
@@ -408,39 +460,6 @@ class Settings {
             });
         }
 
-        {
-            LinearLayout line = new LinearLayout(context);
-            linearLayout.addView(line);
-
-            TextView textView = new TextView(context);
-            line.addView(textView);
-            textView.setText(R.string.size_multiple);
-
-            EditText editText = new EditText(context);
-            line.addView(editText);
-            editText.setHint(R.string.default_value);
-            editText.setText(SharedPreferencesUtil.sharedPreferences.getFloat(SharedPreferencesUtil.SIZE_MULTIPLE, SharedPreferencesUtil.SIZE_MULTIPLE_DEFAULT) + "");
-            editText.setWidth(500);
-            editText.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {
-                    try {
-                        SharedPreferencesUtil.sharedPreferences.edit().putFloat(SharedPreferencesUtil.SIZE_MULTIPLE, Float.parseFloat(editable.toString())).commit();
-                    } catch (Exception e) {
-                        SharedPreferencesUtil.sharedPreferences.edit().remove(SharedPreferencesUtil.SIZE_MULTIPLE).commit();
-                    }
-                }
-            });
-        }
-
         // ════════════════════════════════════════════════════════════
         // MONITOR TOGGLES SECTION
         // ════════════════════════════════════════════════════════════
@@ -483,6 +502,19 @@ class Settings {
                     @Override
                     public void onClick(View v) {
                         SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPULOAD, sw.isChecked()).commit();
+                    }
+                });
+            }
+            {
+                final Switch sw = new Switch(context);
+                linearLayout.addView(sw);
+                sw.setText(R.string.show_cpu_active);
+                if (SharedPreferencesUtil.sharedPreferences.getBoolean(SharedPreferencesUtil.SHOW_CPU_ACTIVE, SharedPreferencesUtil.SHOW_CPU_ACTIVE_DEFAULT))
+                    sw.setChecked(true);
+                sw.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferencesUtil.sharedPreferences.edit().putBoolean(SharedPreferencesUtil.SHOW_CPU_ACTIVE, sw.isChecked()).commit();
                     }
                 });
             }
@@ -645,6 +677,8 @@ class Settings {
         }
 
         // Window size overrides (optional)
+        final EditText editWidth;
+        final EditText editHeight;
         {
             LinearLayout line = new LinearLayout(context);
             linearLayout.addView(line);
@@ -652,15 +686,15 @@ class Settings {
             TextView textView = new TextView(context);
             line.addView(textView);
             textView.setText(R.string.window_width);
-            EditText editText = new EditText(context);
-            line.addView(editText);
-            editText.setHint(R.string.default_value);
+            editWidth = new EditText(context);
+            line.addView(editWidth);
+            editWidth.setHint(R.string.default_value);
             int width = SharedPreferencesUtil.sharedPreferences.getInt(SharedPreferencesUtil.WINDOW_WIDTH, SharedPreferencesUtil.DEFAULT_WIDTH);
             if (width != -1)
-                editText.setText(width + "");
-            editText.setWidth(500);
-            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
-            editText.addTextChangedListener(new TextWatcher() {
+                editWidth.setText(width + "");
+            editWidth.setWidth(500);
+            editWidth.setInputType(InputType.TYPE_CLASS_NUMBER);
+            editWidth.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 }
@@ -688,15 +722,15 @@ class Settings {
             line.addView(textView);
             textView.setText(R.string.window_height);
 
-            EditText editText = new EditText(context);
-            line.addView(editText);
-            editText.setHint(R.string.default_value);
+            editHeight = new EditText(context);
+            line.addView(editHeight);
+            editHeight.setHint(R.string.default_value);
             int height = SharedPreferencesUtil.sharedPreferences.getInt(SharedPreferencesUtil.WINDOW_HEIGHT, SharedPreferencesUtil.DEFAULT_WINDOW_HEIGHT);
             if (height != -1)
-                editText.setText(height + "");
-            editText.setWidth(500);
-            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
-            editText.addTextChangedListener(new TextWatcher() {
+                editHeight.setText(height + "");
+            editHeight.setWidth(500);
+            editHeight.setInputType(InputType.TYPE_CLASS_NUMBER);
+            editHeight.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 }
@@ -714,6 +748,31 @@ class Settings {
                     }
                 }
             });
+        }
+
+        {
+            TextView autoNotice = new TextView(context);
+            autoNotice.setText(R.string.window_size_auto_notice);
+            autoNotice.setTextColor(Color.GRAY);
+            autoNotice.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            autoNotice.setPadding(0, 8, 0, 8);
+            linearLayout.addView(autoNotice);
+
+            Button resetBtn = new Button(context);
+            resetBtn.setText(R.string.reset_window_size);
+            resetBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SharedPreferencesUtil.sharedPreferences.edit()
+                            .remove(SharedPreferencesUtil.WINDOW_WIDTH)
+                            .remove(SharedPreferencesUtil.WINDOW_HEIGHT)
+                            .commit();
+                    editWidth.setText("");
+                    editHeight.setText("");
+                    Toast.makeText(context, R.string.window_size_auto_notice, Toast.LENGTH_SHORT).show();
+                }
+            });
+            linearLayout.addView(resetBtn);
         }
 
         return scrollView;

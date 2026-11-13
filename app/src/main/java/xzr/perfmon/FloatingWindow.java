@@ -29,6 +29,7 @@ import static xzr.perfmon.RefreshingDateThread.adrenofreq;
 import static xzr.perfmon.RefreshingDateThread.adrenoload;
 import static xzr.perfmon.RefreshingDateThread.cpuAvgLoad;
 import static xzr.perfmon.RefreshingDateThread.cpuMaxFreq;
+import static xzr.perfmon.RefreshingDateThread.cpuActivePercent;
 import static xzr.perfmon.RefreshingDateThread.cpufreq;
 import static xzr.perfmon.RefreshingDateThread.cpuload;
 import static xzr.perfmon.RefreshingDateThread.cpunum;
@@ -59,6 +60,7 @@ public class FloatingWindow extends Service {
 
     static boolean showCpufreqNow;
     static boolean showCpuloadNow;
+    static boolean showCpuActiveNow;
     static boolean showGpufreqNow;
     static boolean showGpuloadNow;
     static boolean showCpubwNow;
@@ -103,6 +105,8 @@ public class FloatingWindow extends Service {
                 SharedPreferencesUtil.SHOW_CPUFREQ, SharedPreferencesUtil.SHOW_CPUFREQ_DEFAULT);
         showCpuloadNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
                 SharedPreferencesUtil.SHOW_CPULOAD, SharedPreferencesUtil.SHOW_CPULOAD_DEFAULT);
+        showCpuActiveNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
+                SharedPreferencesUtil.SHOW_CPU_ACTIVE, SharedPreferencesUtil.SHOW_CPU_ACTIVE_DEFAULT);
         showGpufreqNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
                 SharedPreferencesUtil.SHOW_GPUFREQ, SharedPreferencesUtil.SHOW_GPUFREQ_DEFAULT);
         showGpuloadNow = SharedPreferencesUtil.sharedPreferences.getBoolean(
@@ -153,7 +157,7 @@ public class FloatingWindow extends Service {
         int userWidth = SharedPreferencesUtil.sharedPreferences.getInt(
                 SharedPreferencesUtil.WINDOW_WIDTH, SharedPreferencesUtil.DEFAULT_WIDTH);
         if (userWidth != SharedPreferencesUtil.DEFAULT_WIDTH && userWidth > 0) {
-            params.width = userWidth;
+            params.width = (int) (userWidth * sizeMultipleNow);
         } else {
             params.width = WindowManager.LayoutParams.WRAP_CONTENT;
         }
@@ -161,7 +165,7 @@ public class FloatingWindow extends Service {
         int userHeight = SharedPreferencesUtil.sharedPreferences.getInt(
                 SharedPreferencesUtil.WINDOW_HEIGHT, SharedPreferencesUtil.DEFAULT_WINDOW_HEIGHT);
         if (userHeight != SharedPreferencesUtil.DEFAULT_WINDOW_HEIGHT && userHeight > 0) {
-            params.height = userHeight;
+            params.height = (int) (userHeight * sizeMultipleNow);
         } else {
             params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         }
@@ -172,15 +176,15 @@ public class FloatingWindow extends Service {
         // RivaTuner rounded HUD background
         GradientDrawable bgDrawable = new GradientDrawable();
         bgDrawable.setColor(theme.bgColor);
-        bgDrawable.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()));
+        bgDrawable.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()) * sizeMultipleNow);
         if (theme.borderColor != Color.TRANSPARENT) {
             int strokePx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
             bgDrawable.setStroke(Math.max(1, strokePx), theme.borderColor);
         }
         main.setBackground(bgDrawable);
 
-        int padH = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
-        int padV = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics());
+        int padH = Math.max(3, (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()) * sizeMultipleNow));
+        int padV = Math.max(2, (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()) * sizeMultipleNow));
         main.setPadding(padH, padV, padH, padV);
 
         gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -288,13 +292,14 @@ public class FloatingWindow extends Service {
         tv.setTypeface(theme.typeface);
         tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12 * sizeMultipleNow);
         tv.setTextColor(theme.valueColor);
-        tv.setShadowLayer(3.0f, 1.8f, 1.8f, Color.BLACK);
+        tv.setShadowLayer(3.0f * sizeMultipleNow, 1.8f * sizeMultipleNow, 1.8f * sizeMultipleNow, Color.BLACK);
         tv.setIncludeFontPadding(false);
         tv.setSingleLine(true);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
-        lp.bottomMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
+        int marginV = Math.max(1, (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()) * sizeMultipleNow));
+        lp.topMargin = marginV;
+        lp.bottomMargin = marginV;
         tv.setLayoutParams(lp);
         return tv;
     }
@@ -303,26 +308,19 @@ public class FloatingWindow extends Service {
         // Build rows according to configuration
         List<TextView> allLines = new ArrayList<>();
 
-        // 1. GPU line
-        if (Support.support_adrenofreq && (showGpufreqNow || showGpuloadNow)) {
-            gpuLine = createRtssTextView();
-            main.addView(gpuLine);
-            allLines.add(gpuLine);
-        }
-
-        // 2. CPU line(s)
+        // 1. CPU line(s) - FIRST
         boolean showGrouped = (cpuMode == SharedPreferencesUtil.RTSS_CPU_GROUPED ||
                 cpuMode == SharedPreferencesUtil.RTSS_CPU_BOTH);
         boolean showPerCore = (cpuMode == SharedPreferencesUtil.RTSS_CPU_PER_CORE ||
                 cpuMode == SharedPreferencesUtil.RTSS_CPU_BOTH);
 
-        if (showGrouped && (showCpufreqNow || showCpuloadNow || showThermalNow)) {
+        if (showGrouped && (showCpufreqNow || showCpuloadNow || showThermalNow || showCpuActiveNow)) {
             cpuGroupedLine = createRtssTextView();
             main.addView(cpuGroupedLine);
             allLines.add(cpuGroupedLine);
         }
 
-        if (showPerCore && (showCpufreqNow || showCpuloadNow) && Support.support_cpufreq) {
+        if (showPerCore && (showCpufreqNow || showCpuloadNow || showCpuActiveNow) && Support.support_cpufreq) {
             int coreCount = Math.max(1, RefreshingDateThread.cpunum);
             cpuCoreLines = new TextView[coreCount];
             for (int i = 0; i < coreCount; i++) {
@@ -332,32 +330,39 @@ public class FloatingWindow extends Service {
             }
         }
 
-        // 3. RAM line
+        // 2. GPU line - SECOND
+        if (Support.support_adrenofreq && (showGpufreqNow || showGpuloadNow)) {
+            gpuLine = createRtssTextView();
+            main.addView(gpuLine);
+            allLines.add(gpuLine);
+        }
+
+        // 3. RAM line - THIRD
         if (Support.support_mem && showMemNow) {
             ramLine = createRtssTextView();
             main.addView(ramLine);
             allLines.add(ramLine);
         }
 
-        // 4. Standalone Temp line (when not already included on grouped CPU line)
-        if (Support.support_temp && showThermalNow && !showGrouped) {
-            tempLine = createRtssTextView();
-            main.addView(tempLine);
-            allLines.add(tempLine);
-        }
-
-        // 5. FPS line
+        // 4. FPS line - FOURTH
         if (Support.support_fps && showFpsNow) {
             fpsLine = createRtssTextView();
             main.addView(fpsLine);
             allLines.add(fpsLine);
         }
 
-        // 6. Current / Battery line
+        // 5. Current / Battery line
         if ((Support.support_current && showCurrentNow) || (Support.support_batttemp && showBattTempNow)) {
             currentLine = createRtssTextView();
             main.addView(currentLine);
             allLines.add(currentLine);
+        }
+
+        // 6. Standalone Temp line (when not already included on grouped CPU line)
+        if (Support.support_temp && showThermalNow && !showGrouped) {
+            tempLine = createRtssTextView();
+            main.addView(tempLine);
+            allLines.add(tempLine);
         }
 
         // 7. Devfreq / Bus lines
@@ -416,6 +421,9 @@ public class FloatingWindow extends Service {
                 }
                 if (showCpuloadNow && Support.support_cpuload) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(cpuAvgLoad), "%"));
+                }
+                if (showCpuActiveNow && cpuActivePercent >= 0) {
+                    items.add(new RtssFormatter.MetricItem(String.valueOf(cpuActivePercent), "% ACT"));
                 }
                 if (showCpufreqNow && Support.support_cpufreq) {
                     items.add(new RtssFormatter.MetricItem(String.valueOf(cpuMaxFreq), "MHz"));

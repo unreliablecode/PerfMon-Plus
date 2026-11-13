@@ -3,6 +3,7 @@
     <string name="please_close_app_first">请先关闭悬浮窗 再打开软件</string>
     <string name="support_cpufreq_mo">支持cpu频率监控：</string>
     <string name="support_cpuload_mo">支持cpu负载监控：</string>
+    <string name="support_cpu_active_mo">支持CPU活跃时间监控：</string>
     <string name="support_cpubw_mo">支持cpubw频率监控：</string>
     <string name="support_current_mo">支持电流监控：</string>
     <string name="support_batttemp_mo">支持电池温度监控：</string>
@@ -36,6 +37,7 @@
     <string name="show_cpufreq">显示cpu频率</string>
     <string name="show_cpubw">显示cpubw频率</string>
     <string name="show_cpuload">显示cpu负载</string>
+    <string name="show_cpu_active">显示CPU活跃时间百分比</string>
     <string name="show_current">显示电流信息</string>
     <string name="show_batttemp">显示电池温度</string>
     <string name="batt_temp">"电池温度 "</string>
@@ -51,6 +53,8 @@
     <string name="support_llcbw_mo">支持system cache bw监控：</string>
     <string name="window_width">窗体宽度</string>
     <string name="window_height">窗体高度</string>
+    <string name="reset_window_size">重置为自适应大小 (贴合内容)</string>
+    <string name="window_size_auto_notice">* 自适应大小将使窗口大小直接与缩放内容绑定。</string>
     <string name="show_fps">显示fps</string>
     <string name="support_fps_mo">支持fps监控：</string>
     <string name="skip_first_screen_str">跳过兼容性检测页面</string>

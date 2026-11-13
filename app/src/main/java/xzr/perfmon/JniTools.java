@@ -38,4 +38,6 @@ public class JniTools {
     public static native String getFps();
 
     public static native int getBatteryTemp();
+
+    public static native int getCpuActivePercent();
 }

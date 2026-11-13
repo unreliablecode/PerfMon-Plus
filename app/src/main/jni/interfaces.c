@@ -199,3 +199,45 @@ JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getBatteryTemp
     }
     return UNSUPPORTED;
 }
+
+static unsigned long long prev_active_stat = 0;
+static unsigned long long prev_total_stat = 0;
+
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuActivePercent
+        (JNIEnv *env, jclass jclass1) {
+    FILE *file = fopen("/proc/stat", "r");
+    if (file == NULL)
+        return UNSUPPORTED;
+
+    char tag[16];
+    unsigned long long user = 0, nice = 0, system = 0, idle = 0, iowait = 0, irq = 0, softirq = 0, steal = 0;
+    if (fscanf(file, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
+               tag, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) < 9) {
+        fclose(file);
+        return UNSUPPORTED;
+    }
+    fclose(file);
+
+    unsigned long long active = user + nice + system + irq + softirq + steal;
+    unsigned long long total = active + idle + iowait;
+
+    if (prev_total_stat == 0 || total <= prev_total_stat) {
+        prev_active_stat = active;
+        prev_total_stat = total;
+        return 0;
+    }
+
+    unsigned long long delta_active = active - prev_active_stat;
+    unsigned long long delta_total = total - prev_total_stat;
+
+    prev_active_stat = active;
+    prev_total_stat = total;
+
+    if (delta_total == 0)
+        return 0;
+
+    int percent = (int) ((delta_active * 100) / delta_total);
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+    return percent;
+}

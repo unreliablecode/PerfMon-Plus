@@ -3,6 +3,7 @@ package xzr.perfmon;
 class Support {
     static boolean support_cpufreq;
     static boolean support_cpuload;
+    static boolean support_cpu_active;
     static boolean support_adrenofreq;
     static boolean support_mincpubw;
     static boolean support_cpubw;
@@ -26,6 +27,7 @@ class Support {
         } else support_cpufreq = false;
 
         support_cpuload = JniTools.checkCpuLoad();
+        support_cpu_active = support_cpuload;
 
         if (JniTools.getAdrenoFreq() != UNSUPPORTED) {
             linen++;

@@ -30,6 +30,9 @@ public class SharedPreferencesUtil {
     static final String SHOW_CPULOAD = "show_cpuload";
     static final boolean SHOW_CPULOAD_DEFAULT = true;
 
+    static final String SHOW_CPU_ACTIVE = "show_cpu_active";
+    static final boolean SHOW_CPU_ACTIVE_DEFAULT = true;
+
     static final String SHOW_GPUFREQ = "show_gpufreq";
     static final boolean SHOW_GPUFREQ_DEFAULT = true;
 

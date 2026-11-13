@@ -13,6 +13,7 @@ public class RefreshingDateThread extends Thread {
     static int[] cpuonline;
     static int cpuAvgLoad;
     static int cpuMaxFreq;
+    static int cpuActivePercent;
     static int adrenoload;
     static int adrenofreq;
     static int mincpubw;
@@ -66,6 +67,14 @@ public class RefreshingDateThread extends Thread {
             }
             cpuAvgLoad = onlineCount > 0 ? (totalLoad / onlineCount) : 0;
             cpuMaxFreq = maxFreq;
+
+            if (FloatingWindow.showCpuActiveNow) {
+                int act = JniTools.getCpuActivePercent();
+                if (act == Support.UNSUPPORTED || act < 0) {
+                    act = readCpuActivePercentJava();
+                }
+                cpuActivePercent = (act >= 0) ? act : cpuAvgLoad;
+            }
 
             if (FloatingWindow.showGpufreqNow && Support.support_adrenofreq)
                 adrenofreq = JniTools.getAdrenoFreq();
@@ -149,5 +158,44 @@ public class RefreshingDateThread extends Thread {
             } catch (Exception ignored) {
             }
         }
+    }
+
+    private static long prevJavaActive = 0;
+    private static long prevJavaTotal = 0;
+
+    private static int readCpuActivePercentJava() {
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader("/proc/stat"))) {
+            String line = reader.readLine();
+            if (line != null && line.startsWith("cpu ")) {
+                String[] toks = line.trim().split("\\s+");
+                if (toks.length >= 8) {
+                    long user = Long.parseLong(toks[1]);
+                    long nice = Long.parseLong(toks[2]);
+                    long system = Long.parseLong(toks[3]);
+                    long idle = Long.parseLong(toks[4]);
+                    long iowait = toks.length > 5 ? Long.parseLong(toks[5]) : 0;
+                    long irq = toks.length > 6 ? Long.parseLong(toks[6]) : 0;
+                    long softirq = toks.length > 7 ? Long.parseLong(toks[7]) : 0;
+                    long steal = toks.length > 8 ? Long.parseLong(toks[8]) : 0;
+
+                    long active = user + nice + system + irq + softirq + steal;
+                    long total = active + idle + iowait;
+
+                    if (prevJavaTotal > 0 && total > prevJavaTotal) {
+                        long dActive = active - prevJavaActive;
+                        long dTotal = total - prevJavaTotal;
+                        prevJavaActive = active;
+                        prevJavaTotal = total;
+                        if (dTotal > 0) {
+                            int pct = (int) ((dActive * 100) / dTotal);
+                            return Math.max(0, Math.min(100, pct));
+                        }
+                    }
+                    prevJavaActive = active;
+                    prevJavaTotal = total;
+                }
+            }
+        } catch (Exception ignored) {}
+        return -1;
     }
 }

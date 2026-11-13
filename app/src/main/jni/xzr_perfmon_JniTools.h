@@ -143,6 +143,14 @@ JNIEXPORT jstring JNICALL Java_xzr_perfmon_JniTools_getFps
 JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getBatteryTemp
         (JNIEnv *, jclass);
 
+/*
+ * Class:     xzr_perfmon_JniTools
+ * Method:    getcpuactivepercent
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xzr_perfmon_JniTools_getCpuActivePercent
+        (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif
